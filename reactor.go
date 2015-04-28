@@ -19,11 +19,17 @@ type reactor struct {
 	name              string
 	javascriptFolders []fileMapping
 	cssFolders        []fileMapping
+	props             map[string]string
 }
 
 func New(name string) reactor {
 	r := reactor{name: name}
 	return r
+}
+
+func (r *reactor) SetInitialProperties(props map[string]string) {
+	// Keep ref or copy?
+	r.props = props
 }
 
 func (r *reactor) MapJavascriptFolder(file string, web string) {
@@ -59,19 +65,28 @@ func (r reactor) Html() html.Node {
 		if err == nil {
 			for _, cssFile := range files {
 				if filepath.Ext(cssFile.Name()) == ".css" {
-					finalPath := fmt.Sprintf("%v/%v", cssMap.filePath, cssFile.Name())
-					finalPath = strings.Replace(finalPath, cssMap.filePath, cssMap.webPath, 1)
+					finalPath := fmt.Sprintf("/%v/%v", cssMap.webPath, cssFile.Name())
 					headNodes = append(headNodes, html.Link().Rel("stylesheet").Href(finalPath))
 				}
 			}
 		}
 	}
 
+	propsList := []string{}
+
+	if r.props != nil {
+		for key, value := range r.props {
+			propsList = append(propsList, fmt.Sprintf("%v: \"%v\"", key, value))
+		}
+	}
+
+	propsString := fmt.Sprintf("{%v}", strings.Join(propsList, ","))
+
 	return html.Html().Children(
 		html.Head().Children(headNodes...),
 		html.Body().Children(
 			html.Div().Id(css.Id("app-container")),
-			html.Script().TextUnsafe(fmt.Sprintf("React.render(React.createElement(%v, null), document.getElementById('app-container'));", r.name)),
+			html.Script().TextUnsafe(fmt.Sprintf("React.render(React.createElement(%v, %v), document.getElementById('app-container'));", r.name, propsString)),
 		),
 	)
 }
