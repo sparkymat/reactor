@@ -1,12 +1,14 @@
 package reactor
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"path/filepath"
 	"strings"
 
 	"github.com/kirillrdy/nadeshiko/html"
+	"github.com/sparkymat/reactor/property"
 	"github.com/sparkymat/webdsl/css"
 )
 
@@ -19,17 +21,36 @@ type reactor struct {
 	name              string
 	javascriptFolders []fileMapping
 	cssFolders        []fileMapping
-	props             map[string]string
+	props             map[string]Property
 }
 
 func New(name string) reactor {
 	r := reactor{name: name}
+	r.props = make(map[string]Property)
 	return r
 }
 
-func (r *reactor) SetInitialProperties(props map[string]string) {
-	// Keep ref or copy?
-	r.props = props
+func (r *reactor) SetStringProperty(name string, value string) {
+	property := Property{propertyType: property.String, value: value}
+	r.props[name] = property
+}
+
+func (r *reactor) SetIntegerProperty(name string, value int64) {
+	property := Property{propertyType: property.Integer, value: fmt.Sprintf("%v", value)}
+	r.props[name] = property
+}
+
+func (r *reactor) SetFloatProperty(name string, value float64) {
+	property := Property{propertyType: property.Float, value: fmt.Sprintf("%v", value)}
+	r.props[name] = property
+}
+
+func (r *reactor) SetObjectProperty(name string, value interface{}) {
+	jsonValue, _ := json.Marshal(value)
+
+	// FIXME: Ignoring error for now
+	property := Property{propertyType: property.Object, value: strings.Replace(string(jsonValue), "\"", "\\\"\\", -1)}
+	r.props[name] = property
 }
 
 func (r *reactor) MapJavascriptFolder(file string, web string) {
@@ -79,7 +100,7 @@ func (r reactor) Html() html.Node {
 
 	if r.props != nil {
 		for key, value := range r.props {
-			propsList = append(propsList, fmt.Sprintf("%v: \"%v\"", key, value))
+			propsList = append(propsList, fmt.Sprintf("%v: %v", key, value.String()))
 		}
 	}
 
