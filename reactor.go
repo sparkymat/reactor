@@ -44,6 +44,9 @@ func (r reactor) Html() html.Node {
 	headNodes := []html.Node{}
 
 	headNodes = append(headNodes, html.Title().Text(r.name))
+	headNodes = append(headNodes, html.Script().Type("text/javascript").Src("https://code.jquery.com/jquery-2.1.4.min.js"))
+	headNodes = append(headNodes, html.Script().Type("text/javascript").Src("https://cdnjs.cloudflare.com/ajax/libs/lodash.js/3.8.0/lodash.min.js"))
+	headNodes = append(headNodes, html.Script().Type("text/javascript").Src("https://cdnjs.cloudflare.com/ajax/libs/react/0.13.2/react.min.js"))
 
 	// List javascript files
 	for _, jsMap := range r.javascriptFolders {
