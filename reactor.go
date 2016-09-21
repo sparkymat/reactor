@@ -107,7 +107,7 @@ func (r reactor) Html() html.Node {
 		html.Head().Children(headNodes...),
 		html.Body().Children(
 			html.Div().Id(css.Id("app-container")),
-			html.Script().TextUnsafe(fmt.Sprintf("React.render(React.createElement(%v, %v), document.getElementById('app-container'));", r.name, propsString)),
+			html.Script().TextUnsafe(fmt.Sprintf("ReactDOM.render(React.createElement(%v, %v), document.getElementById('app-container'));", r.name, propsString)),
 		),
 	)
 }
