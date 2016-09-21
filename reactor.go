@@ -21,6 +21,8 @@ type reactor struct {
 	name              string
 	javascriptFolders []fileMapping
 	cssFolders        []fileMapping
+	customJavascriptLinks []string
+  customCssLinks    []string
 	props             map[string]Property
 }
 
@@ -61,6 +63,14 @@ func (r *reactor) MapCssFolder(file string, web string) {
 	r.cssFolders = append(r.cssFolders, fileMapping{filePath: file, webPath: web})
 }
 
+func (r *reactor) AddCustomJavascriptLink(link string) {
+	r.customJavascriptLinks = append(r.customJavascriptLinks, link)
+}
+
+func (r *reactor) AddCustomCssLink(link string) {
+	r.customCssLinks = append(r.customCssLinks, link)
+}
+
 func (r reactor) Html() html.Node {
 	headNodes := []html.Node{}
 
@@ -79,6 +89,10 @@ func (r reactor) Html() html.Node {
 		}
 	}
 
+	for _, jsLink := range r.customJavascriptLinks {
+		headNodes = append(headNodes, html.Script().Type("text/javascript").Src(jsLink))
+	}
+
 	// List css files
 	for _, cssMap := range r.cssFolders {
 		files, err := ioutil.ReadDir(cssMap.filePath)
@@ -91,6 +105,10 @@ func (r reactor) Html() html.Node {
 				}
 			}
 		}
+	}
+
+	for _, cssLink := range r.customCssLinks {
+		headNodes = append(headNodes, html.Link().Rel("stylesheet").Href(cssLink))
 	}
 
 	propsList := []string{}
