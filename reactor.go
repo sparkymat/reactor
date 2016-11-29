@@ -18,18 +18,27 @@ type fileMapping struct {
 }
 
 type reactor struct {
-	name              string
-	javascriptFolders []fileMapping
-	cssFolders        []fileMapping
+	name                  string
+	skipReactorStartup    bool
+	javascriptFolders     []fileMapping
+	cssFolders            []fileMapping
 	customJavascriptLinks []string
-  customCssLinks    []string
-	props             map[string]Property
+	customCssLinks        []string
+	props                 map[string]Property
 }
 
 func New(name string) reactor {
 	r := reactor{name: name}
 	r.props = make(map[string]Property)
 	return r
+}
+
+func (r *reactor) EnableReactStartup() {
+	r.skipReactorStartup = false
+}
+
+func (r *reactor) DisableReactStartup() {
+	r.skipReactorStartup = true
 }
 
 func (r *reactor) SetStringProperty(name string, value string) {
@@ -121,11 +130,14 @@ func (r reactor) Html() html.Node {
 
 	propsString := fmt.Sprintf("{%v}", strings.Join(propsList, ","))
 
+	childNodes := []html.Node{html.Div().Id(css.Id("app-container"))}
+
+	if r.skipReactorStartup == false {
+		childNodes = append(childNodes, html.Script().TextUnsafe(fmt.Sprintf("ReactDOM.render(React.createElement(%v, %v), document.getElementById('app-container'));", r.name, propsString)))
+	}
+
 	return html.Html().Children(
 		html.Head().Children(headNodes...),
-		html.Body().Children(
-			html.Div().Id(css.Id("app-container")),
-			html.Script().TextUnsafe(fmt.Sprintf("ReactDOM.render(React.createElement(%v, %v), document.getElementById('app-container'));", r.name, propsString)),
-		),
+		html.Body().Children(childNodes...),
 	)
 }
