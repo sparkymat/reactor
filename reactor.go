@@ -92,7 +92,7 @@ func (r reactor) Html() html.Node {
 			for _, jsFile := range files {
 				if filepath.Ext(jsFile.Name()) == ".js" {
 					finalPath := fmt.Sprintf("/%v/%v", jsMap.webPath, jsFile.Name())
-					headNodes = append(headNodes, html.Script().Type("text/javascript").Src(finalPath))
+					headNodes = append(headNodes, html.Script().Attribute("async", "async").Type("text/javascript").Src(finalPath))
 				}
 			}
 		}
