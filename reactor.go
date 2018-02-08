@@ -14,6 +14,7 @@ type fileMapping struct {
 }
 
 type reactor struct {
+	appId                 string
 	name                  string
 	javascriptFolders     []fileMapping
 	cssFolders            []fileMapping
@@ -21,8 +22,8 @@ type reactor struct {
 	customCssLinks        []string
 }
 
-func New(name string) reactor {
-	r := reactor{name: name}
+func New(name string, appId string) reactor {
+	r := reactor{name: name, appId: appId}
 	return r
 }
 
@@ -83,7 +84,7 @@ func (r reactor) Html() html.HtmlDocument {
 		headNodes = append(headNodes, html.Link().Attr("rel", "stylesheet").Attr("href", cssLink))
 	}
 
-	childNodes := []*html.Node{html.Div().Attr("id", "js-reactor-app")}
+	childNodes := []*html.Node{html.Div().Attr("id", r.appId)}
 
 	childNodes = append(childNodes, javascriptNodes...)
 
