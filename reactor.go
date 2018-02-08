@@ -1,9 +1,9 @@
 package reactor
 
 import (
-	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/sparkymat/webdsl/html"
 )
@@ -50,16 +50,21 @@ func (r reactor) Html() html.HtmlDocument {
 	headNodes = append(headNodes, html.Title(r.name))
 
 	// List javascript files
+	javascriptPaths := []string{}
 	for _, jsMap := range r.javascriptFolders {
-		files, err := ioutil.ReadDir(jsMap.filePath)
-		if err == nil {
-			for _, jsFile := range files {
-				if filepath.Ext(jsFile.Name()) == ".js" {
-					finalPath := fmt.Sprintf("/%v/%v", jsMap.webPath, jsFile.Name())
-					javascriptNodes = append(javascriptNodes, html.Script().Attr("type", "text/javascript").Attr("src", finalPath))
-				}
+		err := filepath.Walk(jsMap.filePath, func(path string, f os.FileInfo, err error) error {
+			if filepath.Ext(f.Name()) == ".js" {
+				javascriptPaths = append(javascriptPaths, strings.Replace(path, jsMap.filePath, jsMap.webPath, 1))
 			}
+			return nil
+		})
+		if err != nil {
+			panic(err)
 		}
+	}
+
+	for _, javascriptPath := range javascriptPaths {
+		javascriptNodes = append(javascriptNodes, html.Script().Attr("type", "text/javascript").Attr("src", javascriptPath))
 	}
 
 	for _, jsLink := range r.customJavascriptLinks {
@@ -67,17 +72,21 @@ func (r reactor) Html() html.HtmlDocument {
 	}
 
 	// List css files
+	cssPaths := []string{}
 	for _, cssMap := range r.cssFolders {
-		files, err := ioutil.ReadDir(cssMap.filePath)
-
-		if err == nil {
-			for _, cssFile := range files {
-				if filepath.Ext(cssFile.Name()) == ".css" {
-					finalPath := fmt.Sprintf("/%v/%v", cssMap.webPath, cssFile.Name())
-					headNodes = append(headNodes, html.Link().Attr("rel", "stylesheet").Attr("href", finalPath))
-				}
+		err := filepath.Walk(cssMap.filePath, func(path string, f os.FileInfo, err error) error {
+			if filepath.Ext(f.Name()) == ".css" {
+				cssPaths = append(cssPaths, strings.Replace(path, cssMap.filePath, cssMap.webPath, 1))
 			}
+			return nil
+		})
+		if err != nil {
+			panic(err)
 		}
+	}
+
+	for _, cssPath := range cssPaths {
+		headNodes = append(headNodes, html.Link().Attr("rel", "stylesheet").Attr("href", cssPath))
 	}
 
 	for _, cssLink := range r.customCssLinks {
